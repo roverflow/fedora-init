@@ -1,1 +1,133 @@
 ---
+- name: Install C/C++ development groups
+  ansible.builtin.dnf5:
+    name: "{{ devtools_c_groups }}"
+    state: present
+  tags: devtools
+
+- name: Install additional development libraries
+  ansible.builtin.dnf5:
+    name: "{{ devtools_c_packages }}"
+    state: present
+  tags: devtools
+
+- name: Install packaging and build tools
+  ansible.builtin.dnf5:
+    name: "{{ devtools_packaging_packages }}"
+    state: present
+  tags: devtools
+
+- name: Add user to mock group
+  ansible.builtin.user:
+    name: "{{ target_user }}"
+    groups: mock
+    append: true
+  tags: devtools
+
+# --- Rust via rustup ---
+
+- name: Check if rustup is installed
+  ansible.builtin.stat:
+    path: "/home/{{ target_user }}/.rustup"
+  register: rustup_dir
+  when: devtools_install_rust
+  tags: devtools
+
+- name: Download rustup installer
+  ansible.builtin.get_url:
+    url: https://sh.rustup.rs
+    dest: /tmp/rustup-init.sh
+    mode: "0755"
+  when: devtools_install_rust and not rustup_dir.stat.exists
+  tags: devtools
+
+- name: Install rustup
+  ansible.builtin.command:
+    cmd: sh /tmp/rustup-init.sh -y
+  become_user: "{{ target_user }}"
+  environment:
+    HOME: "/home/{{ target_user }}"
+  when: devtools_install_rust and not rustup_dir.stat.exists
+  tags: devtools
+
+- name: Clean up rustup installer
+  ansible.builtin.file:
+    path: /tmp/rustup-init.sh
+    state: absent
+  when: devtools_install_rust
+  tags: devtools
+
+# --- nvm ---
+
+- name: Check if nvm is installed
+  ansible.builtin.stat:
+    path: "/home/{{ target_user }}/.nvm"
+  register: nvm_dir
+  when: devtools_install_nvm
+  tags: devtools
+
+- name: Download nvm install script
+  ansible.builtin.get_url:
+    url: "{{ devtools_nvm_install_url }}"
+    dest: /tmp/nvm-install.sh
+    mode: "0755"
+  when: devtools_install_nvm and not nvm_dir.stat.exists
+  tags: devtools
+
+- name: Install nvm
+  ansible.builtin.command:
+    cmd: bash /tmp/nvm-install.sh
+  become_user: "{{ target_user }}"
+  environment:
+    HOME: "/home/{{ target_user }}"
+  when: devtools_install_nvm and not nvm_dir.stat.exists
+  tags: devtools
+
+- name: Clean up nvm installer
+  ansible.builtin.file:
+    path: /tmp/nvm-install.sh
+    state: absent
+  when: devtools_install_nvm
+  tags: devtools
+
+# --- gvm ---
+
+- name: Install gvm dependencies
+  ansible.builtin.dnf5:
+    name:
+      - bison
+      - mercurial
+    state: present
+  when: devtools_install_gvm
+  tags: devtools
+
+- name: Check if gvm is installed
+  ansible.builtin.stat:
+    path: "/home/{{ target_user }}/.gvm"
+  register: gvm_dir
+  when: devtools_install_gvm
+  tags: devtools
+
+- name: Download gvm install script
+  ansible.builtin.get_url:
+    url: "{{ devtools_gvm_install_url }}"
+    dest: /tmp/gvm-installer.sh
+    mode: "0755"
+  when: devtools_install_gvm and not gvm_dir.stat.exists
+  tags: devtools
+
+- name: Install gvm
+  ansible.builtin.command:
+    cmd: bash /tmp/gvm-installer.sh
+  become_user: "{{ target_user }}"
+  environment:
+    HOME: "/home/{{ target_user }}"
+  when: devtools_install_gvm and not gvm_dir.stat.exists
+  tags: devtools
+
+- name: Clean up gvm installer
+  ansible.builtin.file:
+    path: /tmp/gvm-installer.sh
+    state: absent
+  when: devtools_install_gvm
+  tags: devtools

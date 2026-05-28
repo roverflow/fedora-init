@@ -1,1 +1,24 @@
 ---
+devtools_c_groups:
+  - "@c-development"
+  - "@development-tools"
+
+devtools_c_packages:
+  - kernel-devel
+  - kernel-headers
+  - glibc-devel
+  - libstdc++-devel
+
+devtools_packaging_packages:
+  - mock
+  - rpm-build
+  - rpmdevtools
+  - fedora-packager
+  - fedpkg
+
+devtools_install_rust: true
+devtools_install_nvm: true
+devtools_install_gvm: true
+
+devtools_nvm_install_url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh"
+devtools_gvm_install_url: "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer"
