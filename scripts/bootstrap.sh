@@ -14,6 +14,8 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+exec < /dev/tty
+
 echo ""
 echo "=============================="
 echo "  Fedora Init - Desktop Setup"
@@ -174,8 +176,10 @@ echo "Desktop: $DESKTOP_DISPLAY"
 echo "NVIDIA: $NVIDIA_DISPLAY"
 echo ""
 
+cd "$INSTALL_DIR"
+
 ansible-playbook \
-    "$INSTALL_DIR/playbooks/site.yml" \
+    playbooks/site.yml \
     -e "target_user=$TARGET_USER" \
     -e "desktop_environment=$DESKTOP_ENV" \
     -e "enable_nvidia=$ENABLE_NVIDIA"
