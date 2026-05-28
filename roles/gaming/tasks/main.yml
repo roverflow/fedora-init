@@ -10,3 +10,11 @@
     name: "{{ gaming_extra_packages }}"
     state: present
   tags: gaming
+
+- name: Install gaming Flatpak packages
+  community.general.flatpak:
+    name: "{{ item }}"
+    state: present
+    remote: flathub
+  loop: "{{ gaming_flatpak_packages }}"
+  tags: gaming

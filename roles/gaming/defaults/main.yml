@@ -12,4 +12,6 @@ gaming_packages:
 
 gaming_extra_packages:
   - obs-studio
-  - protonup-qt
+
+gaming_flatpak_packages:
+  - net.davidotek.pupgui2
