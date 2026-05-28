@@ -85,3 +85,25 @@
     groups: libvirt
     append: true
   tags: base
+
+- name: Install os-prober
+  ansible.builtin.dnf5:
+    name: os-prober
+    state: present
+  when: enable_os_prober | bool
+  tags: base
+
+- name: Enable os-prober in GRUB config
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_DISABLE_OS_PROBER='
+    line: 'GRUB_DISABLE_OS_PROBER=false'
+  when: enable_os_prober | bool
+  register: grub_os_prober
+  tags: base
+
+- name: Regenerate GRUB config
+  ansible.builtin.command:
+    cmd: grub2-mkconfig -o /boot/grub2/grub.cfg
+  when: enable_os_prober | bool and grub_os_prober is changed
+  tags: base

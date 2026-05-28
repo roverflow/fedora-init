@@ -10,3 +10,5 @@ base_cli_packages:
   - vim
   - tmux
   - fastfetch
+
+enable_os_prober: false
