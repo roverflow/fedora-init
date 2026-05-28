@@ -1,1 +1,62 @@
 ---
+- name: Install NVIDIA driver packages
+  ansible.builtin.dnf5:
+    name: "{{ nvidia_driver_packages }}"
+    state: present
+  tags: nvidia
+
+- name: Install NVIDIA video acceleration packages
+  ansible.builtin.dnf5:
+    name: "{{ nvidia_support_packages }}"
+    state: present
+  tags: nvidia
+
+- name: Update multimedia group with NVIDIA-aware builds
+  ansible.builtin.command:
+    cmd: dnf5 groupupdate multimedia --setopt=install_weak_deps=False --with-optional -y
+  changed_when: true
+  tags: nvidia
+
+- name: Build NVIDIA kernel module
+  ansible.builtin.command:
+    cmd: akmods --force
+  changed_when: true
+  tags: nvidia
+
+- name: Wait for NVIDIA kernel module build
+  ansible.builtin.command:
+    cmd: akmods --check
+  register: akmod_check
+  until: akmod_check.rc == 0
+  retries: 30
+  delay: 10
+  changed_when: false
+  tags: nvidia
+
+- name: Rebuild initramfs with NVIDIA modules
+  ansible.builtin.command:
+    cmd: dracut --force
+  changed_when: true
+  tags: nvidia
+
+- name: Blacklist nouveau driver
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/blacklist-nouveau.conf
+    content: |
+      blacklist nouveau
+      options nouveau modeset=0
+    mode: "0644"
+  tags: nvidia
+
+- name: Check current kernel args
+  ansible.builtin.command:
+    cmd: grubby --info=ALL
+  register: grubby_info
+  changed_when: false
+  tags: nvidia
+
+- name: Enable NVIDIA DRM modesetting for Wayland
+  ansible.builtin.command:
+    cmd: grubby --update-kernel=ALL --args="nvidia-drm.modeset=1"
+  when: "'nvidia-drm.modeset=1' not in grubby_info.stdout"
+  tags: nvidia
