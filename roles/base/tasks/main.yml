@@ -21,14 +21,6 @@
     insertafter: '^\[main\]'
   tags: base
 
-- name: Configure dnf fastest mirror
-  ansible.builtin.lineinfile:
-    path: /etc/dnf/dnf.conf
-    regexp: '^fastestmirror='
-    line: 'fastestmirror=True'
-    insertafter: '^\[main\]'
-  tags: base
-
 - name: Configure dnf default yes
   ansible.builtin.lineinfile:
     path: /etc/dnf/dnf.conf

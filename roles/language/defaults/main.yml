@@ -10,7 +10,7 @@ language_fonts:
   - google-noto-cjk-fonts
   - liberation-fonts
   - jetbrains-mono-fonts
-  - ubuntu-family-fonts
+  - ubuntu-sans-fonts
 
 language_install_input_methods: false
 language_input_method: ibus
