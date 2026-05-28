@@ -26,3 +26,21 @@
 
     - role: language
       tags: language
+
+  post_tasks:
+    - name: Notify reboot required
+      ansible.builtin.debug:
+        msg: "Setup complete! A reboot is required to apply all changes. Run: sudo reboot"
+      tags: always
+
+    - name: Prompt for reboot
+      ansible.builtin.pause:
+        prompt: "Reboot now? (yes/no)"
+      register: reboot_prompt
+      tags: always
+
+    - name: Reboot system
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply Fedora desktop setup changes"
+      when: reboot_prompt.user_input | lower == 'yes'
+      tags: always

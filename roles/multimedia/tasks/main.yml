@@ -23,9 +23,3 @@
   changed_when: true
   tags: multimedia
 
-- name: Update sound-and-video group
-  ansible.builtin.command:
-    cmd: dnf5 group upgrade sound-and-video -y
-  changed_when: true
-  ignore_errors: true
-  tags: multimedia

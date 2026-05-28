@@ -7,10 +7,10 @@ language_fonts:
   - google-noto-sans-fonts
   - google-noto-serif-fonts
   - google-noto-emoji-fonts
-  - google-noto-cjk-fonts
+  - google-noto-sans-cjk-vf-fonts
+  - google-noto-serif-cjk-vf-fonts
   - liberation-fonts
   - jetbrains-mono-fonts
-  - ubuntu-sans-fonts
 
 language_install_input_methods: false
 language_input_method: ibus
