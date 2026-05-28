@@ -1,1 +1,67 @@
 ---
+- name: Check current locale
+  ansible.builtin.command:
+    cmd: localectl status
+  register: locale_status
+  changed_when: false
+  tags: language
+
+- name: Set system locale
+  ansible.builtin.command:
+    cmd: localectl set-locale LANG={{ language_locale }}
+  when: language_locale not in locale_status.stdout
+  tags: language
+
+- name: Install English language pack
+  ansible.builtin.dnf5:
+    name: glibc-langpack-en
+    state: present
+  tags: language
+
+- name: Install extra language packs
+  ansible.builtin.dnf5:
+    name: "{{ language_extra_langpacks }}"
+    state: present
+  when: language_extra_langpacks | length > 0
+  tags: language
+
+- name: Install fonts
+  ansible.builtin.dnf5:
+    name: "{{ language_fonts }}"
+    state: present
+  tags: language
+
+- name: Configure font rendering
+  ansible.builtin.copy:
+    dest: /etc/fonts/local.conf
+    content: |
+      <?xml version="1.0"?>
+      <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+      <fontconfig>
+        <match target="font">
+          <edit name="antialias" mode="assign">
+            <bool>true</bool>
+          </edit>
+          <edit name="hinting" mode="assign">
+            <bool>true</bool>
+          </edit>
+          <edit name="hintstyle" mode="assign">
+            <const>hintslight</const>
+          </edit>
+          <edit name="rgba" mode="assign">
+            <const>rgb</const>
+          </edit>
+          <edit name="lcdfilter" mode="assign">
+            <const>lcddefault</const>
+          </edit>
+        </match>
+      </fontconfig>
+    mode: "0644"
+  tags: language
+
+- name: Install input method framework
+  ansible.builtin.dnf5:
+    name: "{{ language_input_method }}"
+    state: present
+  when: language_install_input_methods
+  tags: language

@@ -1,1 +1,16 @@
 ---
+language_locale: en_US.UTF-8
+
+language_extra_langpacks: []
+
+language_fonts:
+  - google-noto-sans-fonts
+  - google-noto-serif-fonts
+  - google-noto-emoji-fonts
+  - google-noto-cjk-fonts
+  - liberation-fonts
+  - jetbrains-mono-fonts
+  - ubuntu-family-fonts
+
+language_install_input_methods: false
+language_input_method: ibus
