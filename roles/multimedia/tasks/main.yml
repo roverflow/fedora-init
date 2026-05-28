@@ -11,8 +11,15 @@
     state: present
   tags: multimedia
 
-- name: Update multimedia and sound-and-video groups
+- name: Update multimedia group
   ansible.builtin.command:
-    cmd: dnf5 groupupdate multimedia sound-and-video -y
+    cmd: dnf5 groupupdate multimedia -y
   changed_when: true
+  tags: multimedia
+
+- name: Update sound-and-video group
+  ansible.builtin.command:
+    cmd: dnf5 groupupdate sound-and-video -y
+  changed_when: true
+  ignore_errors: true
   tags: multimedia
