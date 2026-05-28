@@ -1,0 +1,25 @@
+---
+- name: Fedora Desktop Setup
+  hosts: localhost
+  connection: local
+  become: true
+
+  roles:
+    - role: base
+      tags: base
+
+    - role: nvidia
+      tags: nvidia
+      when: enable_nvidia | bool
+
+    - role: desktop
+      tags: desktop
+
+    - role: devtools
+      tags: devtools
+
+    - role: multimedia
+      tags: multimedia
+
+    - role: language
+      tags: language

@@ -1,0 +1,4 @@
+---
+target_user: "{{ ansible_user_id }}"
+enable_nvidia: false
+desktop_environment: kde
