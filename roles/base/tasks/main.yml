@@ -99,11 +99,34 @@
     regexp: '^GRUB_DISABLE_OS_PROBER='
     line: 'GRUB_DISABLE_OS_PROBER=false'
   when: enable_os_prober | bool
-  register: grub_os_prober
+  tags: base
+
+- name: Set GRUB timeout for dual-boot menu
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_TIMEOUT='
+    line: 'GRUB_TIMEOUT=5'
+  when: enable_os_prober | bool
+  tags: base
+
+- name: Show GRUB menu instead of hiding it
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_TIMEOUT_STYLE='
+    line: 'GRUB_TIMEOUT_STYLE=menu'
+  when: enable_os_prober | bool
+  tags: base
+
+- name: Disable GRUB menu auto-hide
+  ansible.builtin.command:
+    cmd: grub2-editenv - unset menu_auto_hide
+  changed_when: true
+  when: enable_os_prober | bool
   tags: base
 
 - name: Regenerate GRUB config
   ansible.builtin.command:
     cmd: grub2-mkconfig -o /boot/grub2/grub.cfg
-  when: enable_os_prober | bool and grub_os_prober is changed
+  when: enable_os_prober | bool
+  changed_when: true
   tags: base
