@@ -23,16 +23,6 @@
   changed_when: true
   tags: nvidia
 
-- name: Wait for NVIDIA kernel module build
-  ansible.builtin.command:
-    cmd: akmods --check
-  register: akmod_check
-  until: akmod_check.rc == 0
-  retries: 30
-  delay: 10
-  changed_when: false
-  tags: nvidia
-
 - name: Rebuild initramfs with NVIDIA modules
   ansible.builtin.command:
     cmd: dracut --force
