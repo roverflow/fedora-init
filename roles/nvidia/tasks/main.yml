@@ -13,7 +13,7 @@
 
 - name: Update multimedia group with NVIDIA-aware builds
   ansible.builtin.command:
-    cmd: dnf5 groupupdate multimedia --setopt=install_weak_deps=False --with-optional -y
+    cmd: dnf5 group upgrade multimedia --setopt=install_weak_deps=False --with-optional -y
   changed_when: true
   tags: nvidia
 
