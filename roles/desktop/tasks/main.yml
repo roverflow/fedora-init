@@ -1,1 +1,41 @@
 ---
+- name: Validate desktop environment choice
+  ansible.builtin.fail:
+    msg: "desktop_environment must be 'kde' or 'gnome', got '{{ desktop_environment }}'"
+  when: desktop_environment not in ['kde', 'gnome']
+  tags: desktop
+
+- name: Install KDE desktop environment
+  ansible.builtin.dnf5:
+    name: "@kde-desktop-environment"
+    state: present
+  when: desktop_environment == 'kde'
+  tags: desktop
+
+- name: Install GNOME desktop environment
+  ansible.builtin.dnf5:
+    name: "@workstation-product-environment"
+    state: present
+  when: desktop_environment == 'gnome'
+  tags: desktop
+
+- name: Set default target to graphical
+  ansible.builtin.file:
+    src: /usr/lib/systemd/system/graphical.target
+    dest: /etc/systemd/system/default.target
+    state: link
+  tags: desktop
+
+- name: Enable SDDM display manager for KDE
+  ansible.builtin.systemd_service:
+    name: sddm
+    enabled: true
+  when: desktop_environment == 'kde'
+  tags: desktop
+
+- name: Enable GDM display manager for GNOME
+  ansible.builtin.systemd_service:
+    name: gdm
+    enabled: true
+  when: desktop_environment == 'gnome'
+  tags: desktop
