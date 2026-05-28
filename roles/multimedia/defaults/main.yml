@@ -8,5 +8,4 @@ multimedia_gstreamer_packages:
   - gstreamer1-libav
 
 multimedia_extra_packages:
-  - ffmpeg
   - ffmpeg-libs

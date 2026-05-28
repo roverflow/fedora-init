@@ -1,11 +1,17 @@
 ---
+- name: Swap ffmpeg-free for RPM Fusion ffmpeg
+  ansible.builtin.command:
+    cmd: dnf5 swap ffmpeg-free ffmpeg --allowerasing -y
+  changed_when: true
+  tags: multimedia
+
 - name: Install GStreamer codec plugins
   ansible.builtin.dnf5:
     name: "{{ multimedia_gstreamer_packages }}"
     state: present
   tags: multimedia
 
-- name: Install FFmpeg
+- name: Install FFmpeg libraries
   ansible.builtin.dnf5:
     name: "{{ multimedia_extra_packages }}"
     state: present
