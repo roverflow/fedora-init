@@ -52,6 +52,18 @@ esac
 
 echo ""
 
+# --- Dual-Boot OS Detection ---
+
+read -rp "Enable dual-boot OS detection (os-prober)? [y/N]: " OS_PROBER_CHOICE
+OS_PROBER_CHOICE="${OS_PROBER_CHOICE:-n}"
+
+case "$OS_PROBER_CHOICE" in
+    [yY]|[yY][eE][sS]) ENABLE_OS_PROBER="true" ;;
+    *) ENABLE_OS_PROBER="false" ;;
+esac
+
+echo ""
+
 # --- User Account ---
 
 NON_ROOT_USERS=()
@@ -109,12 +121,18 @@ if [[ "$ENABLE_NVIDIA" == "true" ]]; then
     NVIDIA_DISPLAY="Yes"
 fi
 
+OS_PROBER_DISPLAY="No"
+if [[ "$ENABLE_OS_PROBER" == "true" ]]; then
+    OS_PROBER_DISPLAY="Yes"
+fi
+
 echo ""
 echo "=============================="
 echo "  Setup Summary"
 echo "=============================="
 echo "  Desktop:  $DESKTOP_DISPLAY"
 echo "  NVIDIA:   $NVIDIA_DISPLAY"
+echo "  Dual-boot: $OS_PROBER_DISPLAY"
 echo "  User:     $TARGET_USER"
 echo "=============================="
 echo ""
@@ -182,7 +200,8 @@ ansible-playbook \
     playbooks/site.yml \
     -e "target_user=$TARGET_USER" \
     -e "desktop_environment=$DESKTOP_ENV" \
-    -e "enable_nvidia=$ENABLE_NVIDIA"
+    -e "enable_nvidia=$ENABLE_NVIDIA" \
+    -e "enable_os_prober=$ENABLE_OS_PROBER"
 
 echo ""
 echo "=============================="
