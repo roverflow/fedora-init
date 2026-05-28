@@ -6,6 +6,6 @@ nvidia_driver_packages:
   - xorg-x11-drv-nvidia-cuda-libs
 
 nvidia_support_packages:
-  - nvidia-vaapi-driver
+  - libva-nvidia-driver
   - libva-utils
   - vdpauinfo
