@@ -1,1 +1,95 @@
 ---
+- name: Install RPM Fusion free repository
+  ansible.builtin.dnf5:
+    name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+    state: present
+    disable_gpg_check: true
+  tags: base
+
+- name: Install RPM Fusion nonfree repository
+  ansible.builtin.dnf5:
+    name: "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
+    state: present
+    disable_gpg_check: true
+  tags: base
+
+- name: Configure dnf max parallel downloads
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/dnf.conf
+    regexp: '^max_parallel_downloads='
+    line: 'max_parallel_downloads=10'
+    insertafter: '^\[main\]'
+  tags: base
+
+- name: Configure dnf fastest mirror
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/dnf.conf
+    regexp: '^fastestmirror='
+    line: 'fastestmirror=True'
+    insertafter: '^\[main\]'
+  tags: base
+
+- name: Configure dnf default yes
+  ansible.builtin.lineinfile:
+    path: /etc/dnf/dnf.conf
+    regexp: '^defaultyes='
+    line: 'defaultyes=True'
+    insertafter: '^\[main\]'
+  tags: base
+
+- name: Update all packages
+  ansible.builtin.dnf5:
+    name: "*"
+    state: latest
+  tags: base
+
+- name: Install essential CLI tools
+  ansible.builtin.dnf5:
+    name: "{{ base_cli_packages }}"
+    state: present
+  tags: base
+
+- name: Install firewalld
+  ansible.builtin.dnf5:
+    name: firewalld
+    state: present
+  tags: base
+
+- name: Enable and start firewalld
+  ansible.builtin.systemd_service:
+    name: firewalld
+    enabled: true
+    state: started
+  tags: base
+
+- name: Install flatpak
+  ansible.builtin.dnf5:
+    name: flatpak
+    state: present
+  tags: base
+
+- name: Add Flathub remote
+  ansible.builtin.command:
+    cmd: flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  changed_when: false
+  tags: base
+
+- name: Install virtualization group
+  ansible.builtin.dnf5:
+    name: "@virtualization"
+    state: present
+  tags: base
+
+- name: Enable and start libvirtd
+  ansible.builtin.systemd_service:
+    name: libvirtd
+    enabled: true
+    state: started
+  tags: base
+
+- name: Add user to libvirt group
+  ansible.builtin.user:
+    name: "{{ target_user }}"
+    groups: libvirt
+    append: true
+  tags: base

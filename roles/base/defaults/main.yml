@@ -1,1 +1,12 @@
 ---
+base_cli_packages:
+  - git
+  - curl
+  - wget
+  - htop
+  - btop
+  - unzip
+  - tar
+  - vim
+  - tmux
+  - fastfetch
