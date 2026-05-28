@@ -40,7 +40,7 @@
       tags: always
 
     - name: Reboot system
-      ansible.builtin.reboot:
-        msg: "Rebooting to apply Fedora desktop setup changes"
+      ansible.builtin.command:
+        cmd: systemctl reboot
       when: reboot_prompt.user_input | lower == 'yes'
       tags: always
