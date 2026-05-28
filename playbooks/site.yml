@@ -15,6 +15,9 @@
     - role: desktop
       tags: desktop
 
+    - role: gaming
+      tags: gaming
+
     - role: devtools
       tags: devtools
 

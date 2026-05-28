@@ -1,0 +1,15 @@
+---
+gaming_packages:
+  - steam
+  - lutris
+  - gamemode
+  - mangohud
+  - goverlay
+  - gamescope
+  - wine
+  - winetricks
+  - protontricks
+
+gaming_extra_packages:
+  - obs-studio
+  - protonup-qt

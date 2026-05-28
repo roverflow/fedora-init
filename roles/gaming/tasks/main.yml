@@ -1,0 +1,12 @@
+---
+- name: Install gaming packages
+  ansible.builtin.dnf5:
+    name: "{{ gaming_packages }}"
+    state: present
+  tags: gaming
+
+- name: Install extra gaming packages
+  ansible.builtin.dnf5:
+    name: "{{ gaming_extra_packages }}"
+    state: present
+  tags: gaming
