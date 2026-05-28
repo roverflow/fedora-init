@@ -6,24 +6,23 @@
   tags: desktop
 
 - name: Install KDE desktop environment
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "@kde-desktop-environment"
     state: present
   when: desktop_environment == 'kde'
   tags: desktop
 
 - name: Install GNOME desktop environment
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "@workstation-product-environment"
     state: present
   when: desktop_environment == 'gnome'
   tags: desktop
 
 - name: Set default target to graphical
-  ansible.builtin.file:
-    src: /usr/lib/systemd/system/graphical.target
-    dest: /etc/systemd/system/default.target
-    state: link
+  ansible.builtin.command:
+    cmd: systemctl set-default graphical.target
+  changed_when: true
   tags: desktop
 
 - name: Enable SDDM display manager for KDE

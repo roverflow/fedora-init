@@ -1,12 +1,12 @@
 ---
 - name: Install NVIDIA driver packages
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ nvidia_driver_packages }}"
     state: present
   tags: nvidia
 
 - name: Install NVIDIA video acceleration packages
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ nvidia_support_packages }}"
     state: present
   tags: nvidia

@@ -1,18 +1,18 @@
 ---
 - name: Install C/C++ development groups
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ devtools_c_groups }}"
     state: present
   tags: devtools
 
 - name: Install additional development libraries
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ devtools_c_packages }}"
     state: present
   tags: devtools
 
 - name: Install packaging and build tools
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ devtools_packaging_packages }}"
     state: present
   tags: devtools
@@ -93,7 +93,7 @@
 # --- gvm ---
 
 - name: Install gvm dependencies
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name:
       - bison
       - mercurial

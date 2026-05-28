@@ -1,13 +1,13 @@
 ---
 - name: Install RPM Fusion free repository
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
     state: present
     disable_gpg_check: true
   tags: base
 
 - name: Install RPM Fusion nonfree repository
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
     state: present
     disable_gpg_check: true
@@ -30,19 +30,19 @@
   tags: base
 
 - name: Update all packages
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "*"
     state: latest
   tags: base
 
 - name: Install essential CLI tools
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ base_cli_packages }}"
     state: present
   tags: base
 
 - name: Install firewalld
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: firewalld
     state: present
   tags: base
@@ -55,7 +55,7 @@
   tags: base
 
 - name: Install flatpak
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: flatpak
     state: present
   tags: base
@@ -67,7 +67,7 @@
   tags: base
 
 - name: Install virtualization group
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "@virtualization"
     state: present
   tags: base
@@ -87,7 +87,7 @@
   tags: base
 
 - name: Install os-prober
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: os-prober
     state: present
   when: enable_os_prober | bool

@@ -6,13 +6,13 @@
   tags: multimedia
 
 - name: Install GStreamer codec plugins
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ multimedia_gstreamer_packages }}"
     state: present
   tags: multimedia
 
 - name: Install FFmpeg libraries
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ multimedia_extra_packages }}"
     state: present
   tags: multimedia

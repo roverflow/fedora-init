@@ -13,20 +13,20 @@
   tags: language
 
 - name: Install English language pack
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: glibc-langpack-en
     state: present
   tags: language
 
 - name: Install extra language packs
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ language_extra_langpacks }}"
     state: present
   when: language_extra_langpacks | length > 0
   tags: language
 
 - name: Install fonts
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ language_fonts }}"
     state: present
   tags: language
@@ -60,7 +60,7 @@
   tags: language
 
 - name: Install input method framework
-  ansible.builtin.dnf5:
+  ansible.builtin.dnf:
     name: "{{ language_input_method }}"
     state: present
   when: language_install_input_methods
