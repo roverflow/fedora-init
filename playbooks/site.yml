@@ -15,6 +15,9 @@
     - role: desktop
       tags: desktop
 
+    - role: shell
+      tags: shell
+
     - role: gaming
       tags: gaming
 
