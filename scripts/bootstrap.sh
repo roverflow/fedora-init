@@ -64,6 +64,18 @@ esac
 
 echo ""
 
+# --- Gaming Packages ---
+
+read -rp "Install gaming packages (Steam, Lutris, Wine, etc.)? [y/N]: " GAMING_CHOICE
+GAMING_CHOICE="${GAMING_CHOICE:-n}"
+
+case "$GAMING_CHOICE" in
+    [yY]|[yY][eE][sS]) ENABLE_GAMING="true" ;;
+    *) ENABLE_GAMING="false" ;;
+esac
+
+echo ""
+
 # --- User Account ---
 
 NON_ROOT_USERS=()
@@ -126,6 +138,11 @@ if [[ "$ENABLE_OS_PROBER" == "true" ]]; then
     OS_PROBER_DISPLAY="Yes"
 fi
 
+GAMING_DISPLAY="No"
+if [[ "$ENABLE_GAMING" == "true" ]]; then
+    GAMING_DISPLAY="Yes"
+fi
+
 echo ""
 echo "=============================="
 echo "  Setup Summary"
@@ -133,6 +150,7 @@ echo "=============================="
 echo "  Desktop:  $DESKTOP_DISPLAY"
 echo "  NVIDIA:   $NVIDIA_DISPLAY"
 echo "  Dual-boot: $OS_PROBER_DISPLAY"
+echo "  Gaming:   $GAMING_DISPLAY"
 echo "  User:     $TARGET_USER"
 echo "=============================="
 echo ""
@@ -201,7 +219,8 @@ ansible-playbook \
     -e "target_user=$TARGET_USER" \
     -e "desktop_environment=$DESKTOP_ENV" \
     -e "enable_nvidia=$ENABLE_NVIDIA" \
-    -e "enable_os_prober=$ENABLE_OS_PROBER"
+    -e "enable_os_prober=$ENABLE_OS_PROBER" \
+    -e "enable_gaming=$ENABLE_GAMING"
 
 echo ""
 echo "=============================="

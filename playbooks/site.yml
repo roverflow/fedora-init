@@ -20,6 +20,7 @@
 
     - role: gaming
       tags: gaming
+      when: enable_gaming | bool
 
     - role: devtools
       tags: devtools

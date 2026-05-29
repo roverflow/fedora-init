@@ -54,6 +54,27 @@
     state: started
   tags: base
 
+- name: Check if RDP service is allowed in firewalld
+  ansible.builtin.command:
+    cmd: firewall-cmd --permanent --query-service=rdp
+  register: rdp_check
+  failed_when: false
+  changed_when: false
+  tags: base
+
+- name: Allow RDP in firewalld
+  ansible.builtin.command:
+    cmd: firewall-cmd --permanent --add-service=rdp
+  when: rdp_check.rc != 0
+  tags: base
+
+- name: Reload firewalld
+  ansible.builtin.command:
+    cmd: firewall-cmd --reload
+  when: rdp_check.rc != 0
+  changed_when: true
+  tags: base
+
 - name: Install flatpak
   ansible.builtin.dnf:
     name: flatpak
