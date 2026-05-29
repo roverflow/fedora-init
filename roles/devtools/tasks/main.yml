@@ -131,3 +131,21 @@
     state: absent
   when: devtools_install_gvm
   tags: devtools
+
+# --- pyenv ---
+
+- name: Check if pyenv is installed
+  ansible.builtin.stat:
+    path: "/home/{{ target_user }}/.pyenv"
+  register: pyenv_dir
+  when: devtools_install_pyenv
+  tags: devtools
+
+- name: Install pyenv
+  ansible.builtin.shell:
+    cmd: curl -fsSL {{ devtools_pyenv_install_url }} | bash
+  become_user: "{{ target_user }}"
+  environment:
+    HOME: "/home/{{ target_user }}"
+  when: devtools_install_pyenv and not pyenv_dir.stat.exists
+  tags: devtools

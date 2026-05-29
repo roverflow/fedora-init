@@ -8,6 +8,14 @@ devtools_c_packages:
   - kernel-headers
   - glibc-devel
   - libstdc++-devel
+  - zlib-devel
+  - bzip2-devel
+  - readline-devel
+  - sqlite-devel
+  - openssl-devel
+  - libffi-devel
+  - xz-devel
+  - tk-devel
 
 devtools_packaging_packages:
   - mock
@@ -22,3 +30,6 @@ devtools_install_gvm: true
 
 devtools_nvm_install_url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh"
 devtools_gvm_install_url: "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer"
+
+devtools_install_pyenv: true
+devtools_pyenv_install_url: "https://pyenv.run"
