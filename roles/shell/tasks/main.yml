@@ -1,0 +1,49 @@
+---
+- name: Install zsh
+  ansible.builtin.dnf:
+    name: zsh
+    state: present
+  tags: shell
+
+- name: Check if oh-my-zsh is installed
+  ansible.builtin.stat:
+    path: "/home/{{ target_user }}/.oh-my-zsh"
+  register: ohmyzsh_dir
+  tags: shell
+
+- name: Download oh-my-zsh installer
+  ansible.builtin.get_url:
+    url: "{{ shell_ohmyzsh_install_url }}"
+    dest: /tmp/ohmyzsh-install.sh
+    mode: "0755"
+  when: not ohmyzsh_dir.stat.exists
+  tags: shell
+
+- name: Install oh-my-zsh
+  ansible.builtin.command:
+    cmd: sh /tmp/ohmyzsh-install.sh --unattended
+  become_user: "{{ target_user }}"
+  environment:
+    HOME: "/home/{{ target_user }}"
+  when: not ohmyzsh_dir.stat.exists
+  tags: shell
+
+- name: Clean up oh-my-zsh installer
+  ansible.builtin.file:
+    path: /tmp/ohmyzsh-install.sh
+    state: absent
+  tags: shell
+
+- name: Set zsh theme to steeef
+  ansible.builtin.lineinfile:
+    path: "/home/{{ target_user }}/.zshrc"
+    regexp: '^ZSH_THEME='
+    line: 'ZSH_THEME="{{ shell_zsh_theme }}"'
+  become_user: "{{ target_user }}"
+  tags: shell
+
+- name: Set default shell to zsh
+  ansible.builtin.user:
+    name: "{{ target_user }}"
+    shell: /bin/zsh
+  tags: shell
