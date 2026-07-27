@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly UPDATE_API="https://cursor.com/api/download?platform=linux-x64&releaseTrack=stable"
+readonly USER_AGENT="Mozilla/5.0"
+
+TMPDIR=""
+REMOTE_VERSION=""
+DOWNLOAD_URL=""
+
+cleanup() {
+    if [[ -n "$TMPDIR" && -d "$TMPDIR" ]]; then
+        rm -rf "$TMPDIR"
+    fi
+}
+trap cleanup EXIT
+
+json_field() {
+    local field="$1"
+    local payload="$2"
+
+    if command -v jq &>/dev/null; then
+        jq -er --arg f "$field" '.[$f] // empty' <<<"$payload"
+        return
+    fi
+
+    if command -v python3 &>/dev/null; then
+        python3 -c 'import json,sys; print(json.load(sys.stdin)[sys.argv[1]])' "$field" <<<"$payload"
+        return
+    fi
+
+    grep -o "\"${field}\"[[:space:]]*:[[:space:]]*\"[^\"]*\"" <<<"$payload" \
+        | sed "s/.*\"${field}\"[[:space:]]*:[[:space:]]*\"//;s/\"//" \
+        | head -1
+}
+
+check_dependencies() {
+    if ! command -v curl &>/dev/null; then
+        echo "Error: 'curl' is required but not found." >&2
+        return 1
+    fi
+}
+
+get_local_version() {
+    if command -v cursor &>/dev/null; then
+        cursor --version | head -1
+    else
+        echo "0.0.0"
+    fi
+}
+
+fetch_remote_info() {
+    local response
+    response=$(curl -sf -L -A "$USER_AGENT" "$UPDATE_API") || {
+        echo "Error: Failed to reach the Cursor update API." >&2
+        return 1
+    }
+
+    REMOTE_VERSION=$(json_field version "$response")
+    DOWNLOAD_URL=$(json_field rpmUrl "$response")
+
+    if [[ -z "$REMOTE_VERSION" || -z "$DOWNLOAD_URL" ]]; then
+        echo "Error: Unexpected API response format." >&2
+        echo "Response: ${response:0:200}" >&2
+        return 1
+    fi
+}
+
+download_rpm() {
+    local url="$1"
+
+    TMPDIR=$(mktemp -d)
+    local filename
+    filename=$(basename "$url")
+
+    echo "Downloading $filename..." >&2
+    curl -f -L -A "$USER_AGENT" --progress-bar -o "$TMPDIR/$filename" "$url" || {
+        echo "Error: Download failed." >&2
+        return 1
+    }
+
+    echo "$TMPDIR/$filename"
+}
+
+install_rpm() {
+    local rpm_path="$1"
+    echo "Installing with dnf..."
+    if [[ "${EUID}" -eq 0 ]]; then
+        dnf install -y "$rpm_path"
+    else
+        sudo dnf install -y "$rpm_path"
+    fi
+}
+
+main() {
+    check_dependencies
+
+    echo "Checking for Cursor updates..."
+
+    local local_version
+    local_version=$(get_local_version)
+    echo "Local version:  $local_version"
+
+    fetch_remote_info
+    echo "Latest version: $REMOTE_VERSION"
+
+    if [[ "$local_version" == "$REMOTE_VERSION" ]]; then
+        echo "Cursor is already up to date."
+        return 0
+    fi
+
+    local rpm_path
+    rpm_path=$(download_rpm "$DOWNLOAD_URL")
+
+    install_rpm "$rpm_path"
+
+    echo "Updated to Cursor $(cursor --version | head -1)"
+}
+
+main "$@"

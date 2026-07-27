@@ -1,8 +1,20 @@
 ---
+- name: Check if RPM Fusion ffmpeg is installed
+  ansible.builtin.command:
+    cmd: rpm -q ffmpeg
+  register: ffmpeg_rpm
+  failed_when: false
+  changed_when: false
+  tags: multimedia
+
 - name: Swap ffmpeg-free for RPM Fusion ffmpeg
   ansible.builtin.command:
     cmd: dnf5 swap ffmpeg-free ffmpeg --allowerasing -y
-  changed_when: true
+  register: ffmpeg_swap
+  when: ffmpeg_rpm.rc != 0
+  changed_when: >-
+    ffmpeg_swap.rc == 0 and
+    ('Nothing to do' not in (ffmpeg_swap.stdout | default('')))
   tags: multimedia
 
 - name: Install GStreamer codec plugins
@@ -17,9 +29,15 @@
     state: present
   tags: multimedia
 
-- name: Update multimedia group
+- name: Install multimedia group with weak deps disabled
   ansible.builtin.command:
-    cmd: dnf5 group upgrade multimedia -y
-  changed_when: true
+    cmd: >-
+      dnf5 group install multimedia
+      --setopt=install_weak_deps=False
+      --exclude=PackageKit-gstreamer-plugin
+      -y
+  register: multimedia_group
+  changed_when: >-
+    'Nothing to do' not in (multimedia_group.stdout | default('')) and
+    'already installed' not in (multimedia_group.stdout | default('') | lower)
   tags: multimedia
-

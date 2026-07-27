@@ -1,16 +1,26 @@
 ---
+- name: Import RPM Fusion free GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ base_rpmfusion_free_key_url }}"
+  tags: base
+
+- name: Import RPM Fusion nonfree GPG key
+  ansible.builtin.rpm_key:
+    state: present
+    key: "{{ base_rpmfusion_nonfree_key_url }}"
+  tags: base
+
 - name: Install RPM Fusion free repository
   ansible.builtin.dnf:
     name: "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_major_version }}.noarch.rpm"
     state: present
-    disable_gpg_check: true
   tags: base
 
 - name: Install RPM Fusion nonfree repository
   ansible.builtin.dnf:
     name: "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_major_version }}.noarch.rpm"
     state: present
-    disable_gpg_check: true
   tags: base
 
 - name: Configure dnf max parallel downloads
@@ -60,19 +70,53 @@
   register: rdp_check
   failed_when: false
   changed_when: false
+  when: firewall_allow_rdp | bool
   tags: base
 
 - name: Allow RDP in firewalld
   ansible.builtin.command:
     cmd: firewall-cmd --permanent --add-service=rdp
-  when: rdp_check.rc != 0
+  notify: Reload firewalld
+  when:
+    - firewall_allow_rdp | bool
+    - rdp_check.rc != 0
   tags: base
 
-- name: Reload firewalld
+- name: Check if SSH service is allowed in firewalld
   ansible.builtin.command:
-    cmd: firewall-cmd --reload
-  when: rdp_check.rc != 0
-  changed_when: true
+    cmd: firewall-cmd --permanent --query-service=ssh
+  register: ssh_check
+  failed_when: false
+  changed_when: false
+  when: firewall_allow_ssh | bool
+  tags: base
+
+- name: Allow SSH in firewalld
+  ansible.builtin.command:
+    cmd: firewall-cmd --permanent --add-service=ssh
+  notify: Reload firewalld
+  when:
+    - firewall_allow_ssh | bool
+    - ssh_check.rc != 0
+  tags: base
+
+- name: Check if custom TCP port is allowed in firewalld
+  ansible.builtin.command:
+    cmd: "firewall-cmd --permanent --query-port={{ item }}/tcp"
+  register: firewall_port_checks
+  failed_when: false
+  changed_when: false
+  loop: "{{ firewall_tcp_ports }}"
+  tags: base
+
+- name: Allow custom TCP ports in firewalld
+  ansible.builtin.command:
+    cmd: "firewall-cmd --permanent --add-port={{ item.item }}/tcp"
+  notify: Reload firewalld
+  when: item.rc != 0
+  loop: "{{ firewall_port_checks.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item }}/tcp"
   tags: base
 
 - name: Install flatpak
@@ -119,6 +163,7 @@
     path: /etc/default/grub
     regexp: '^GRUB_DISABLE_OS_PROBER='
     line: 'GRUB_DISABLE_OS_PROBER=false'
+  notify: Regenerate GRUB config
   when: enable_os_prober | bool
   tags: base
 
@@ -127,6 +172,7 @@
     path: /etc/default/grub
     regexp: '^GRUB_TIMEOUT='
     line: 'GRUB_TIMEOUT=5'
+  notify: Regenerate GRUB config
   when: enable_os_prober | bool
   tags: base
 
@@ -135,19 +181,23 @@
     path: /etc/default/grub
     regexp: '^GRUB_TIMEOUT_STYLE='
     line: 'GRUB_TIMEOUT_STYLE=menu'
+  notify: Regenerate GRUB config
+  when: enable_os_prober | bool
+  tags: base
+
+- name: Check GRUB menu_auto_hide setting
+  ansible.builtin.command:
+    cmd: grub2-editenv - list
+  register: grubenv_list
+  changed_when: false
   when: enable_os_prober | bool
   tags: base
 
 - name: Disable GRUB menu auto-hide
   ansible.builtin.command:
     cmd: grub2-editenv - unset menu_auto_hide
-  changed_when: true
-  when: enable_os_prober | bool
-  tags: base
-
-- name: Regenerate GRUB config
-  ansible.builtin.command:
-    cmd: grub2-mkconfig -o /boot/grub2/grub.cfg
-  when: enable_os_prober | bool
-  changed_when: true
+  when:
+    - enable_os_prober | bool
+    - "'menu_auto_hide=' in grubenv_list.stdout"
+  notify: Regenerate GRUB config
   tags: base

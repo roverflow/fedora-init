@@ -1,5 +1,6 @@
-INFORMATION.md
-CLAUDE.md
-.claudectx
+*.retry
+.ansible/
 .claude/
-docs/superpowers
+.claudectx
+CLAUDE.md
+INFORMATION.md

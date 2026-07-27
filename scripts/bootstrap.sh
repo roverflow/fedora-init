@@ -76,6 +76,18 @@ esac
 
 echo ""
 
+# --- Cursor IDE ---
+
+read -rp "Install Cursor IDE? [y/N]: " CURSOR_CHOICE
+CURSOR_CHOICE="${CURSOR_CHOICE:-n}"
+
+case "$CURSOR_CHOICE" in
+    [yY]|[yY][eE][sS]) ENABLE_CURSOR="true" ;;
+    *) ENABLE_CURSOR="false" ;;
+esac
+
+echo ""
+
 # --- User Account ---
 
 NON_ROOT_USERS=()
@@ -143,6 +155,11 @@ if [[ "$ENABLE_GAMING" == "true" ]]; then
     GAMING_DISPLAY="Yes"
 fi
 
+CURSOR_DISPLAY="No"
+if [[ "$ENABLE_CURSOR" == "true" ]]; then
+    CURSOR_DISPLAY="Yes"
+fi
+
 echo ""
 echo "=============================="
 echo "  Setup Summary"
@@ -151,6 +168,7 @@ echo "  Desktop:  $DESKTOP_DISPLAY"
 echo "  NVIDIA:   $NVIDIA_DISPLAY"
 echo "  Dual-boot: $OS_PROBER_DISPLAY"
 echo "  Gaming:   $GAMING_DISPLAY"
+echo "  Cursor:   $CURSOR_DISPLAY"
 echo "  User:     $TARGET_USER"
 echo "=============================="
 echo ""
@@ -220,11 +238,25 @@ ansible-playbook \
     -e "desktop_environment=$DESKTOP_ENV" \
     -e "enable_nvidia=$ENABLE_NVIDIA" \
     -e "enable_os_prober=$ENABLE_OS_PROBER" \
-    -e "enable_gaming=$ENABLE_GAMING"
+    -e "enable_gaming=$ENABLE_GAMING" \
+    -e "enable_cursor=$ENABLE_CURSOR"
 
 echo ""
 echo "=============================="
 echo "  Setup complete!"
 echo "=============================="
 echo "A reboot is recommended to apply all changes."
-echo "Run: sudo reboot"
+echo ""
+
+read -rp "Reboot now? [y/N]: " REBOOT_CHOICE
+REBOOT_CHOICE="${REBOOT_CHOICE:-n}"
+
+case "$REBOOT_CHOICE" in
+    [yY]|[yY][eE][sS])
+        echo "Rebooting..."
+        systemctl reboot
+        ;;
+    *)
+        echo "Run: sudo reboot"
+        ;;
+esac

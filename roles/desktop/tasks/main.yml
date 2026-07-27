@@ -19,22 +19,97 @@
   when: desktop_environment == 'gnome'
   tags: desktop
 
+- name: Check current default systemd target
+  ansible.builtin.command:
+    cmd: systemctl get-default
+  register: desktop_current_default
+  changed_when: false
+  tags: desktop
+
 - name: Set default target to graphical
   ansible.builtin.command:
     cmd: systemctl set-default graphical.target
-  changed_when: true
+  when: desktop_current_default.stdout != "graphical.target"
   tags: desktop
 
-- name: Enable SDDM display manager for KDE
-  ansible.builtin.systemd_service:
-    name: sddm
-    enabled: true
-  when: desktop_environment == 'kde'
+- name: Check display-manager.service symlink
+  ansible.builtin.stat:
+    path: /etc/systemd/system/display-manager.service
+  register: display_manager_link
   tags: desktop
 
-- name: Enable GDM display manager for GNOME
-  ansible.builtin.systemd_service:
-    name: gdm
-    enabled: true
-  when: desktop_environment == 'gnome'
+- name: Set SDDM as the display manager
+  ansible.builtin.command:
+    cmd: systemctl enable --force sddm.service
+  when: >-
+    desktop_environment == 'kde' and
+    (not display_manager_link.stat.exists or
+     (display_manager_link.stat.lnk_source | default('') | basename) != 'sddm.service')
+  tags: desktop
+
+- name: Set GDM as the display manager
+  ansible.builtin.command:
+    cmd: systemctl enable --force gdm.service
+  when: >-
+    desktop_environment == 'gnome' and
+    (not display_manager_link.stat.exists or
+     (display_manager_link.stat.lnk_source | default('') | basename) != 'gdm.service')
+  tags: desktop
+
+# --- Cursor IDE ---
+
+- name: Install cursorupdater helper
+  ansible.builtin.copy:
+    src: cursorupdater
+    dest: /usr/local/bin/cursorupdater
+    mode: "0755"
+  when: enable_cursor | bool
+  tags: desktop
+
+- name: Fetch Cursor download metadata
+  ansible.builtin.uri:
+    url: "{{ cursor_download_api }}"
+    return_content: true
+    headers:
+      User-Agent: Mozilla/5.0
+  register: cursor_api
+  when: enable_cursor | bool
+  tags: desktop
+
+- name: Check installed Cursor version
+  ansible.builtin.command:
+    cmd: cursor --version
+  register: cursor_local
+  failed_when: false
+  changed_when: false
+  when: enable_cursor | bool
+  tags: desktop
+
+- name: Download Cursor RPM
+  ansible.builtin.get_url:
+    url: "{{ cursor_api.json.rpmUrl }}"
+    dest: /tmp/cursor-install.rpm
+    mode: "0644"
+  when: >-
+    enable_cursor | bool and
+    (cursor_local.rc != 0 or
+     (cursor_api.json.version | string) not in (cursor_local.stdout | default('')))
+  register: cursor_rpm_download
+  tags: desktop
+
+- name: Install Cursor RPM
+  ansible.builtin.dnf:
+    name: /tmp/cursor-install.rpm
+    state: present
+    disable_gpg_check: true
+  when: >-
+    enable_cursor | bool and
+    cursor_rpm_download is changed
+  tags: desktop
+
+- name: Remove temporary Cursor RPM
+  ansible.builtin.file:
+    path: /tmp/cursor-install.rpm
+    state: absent
+  when: enable_cursor | bool
   tags: desktop

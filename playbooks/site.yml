@@ -4,9 +4,36 @@
   connection: local
   become: true
 
+  pre_tasks:
+    - name: Assert running on Fedora
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution == "Fedora"
+        fail_msg: "This playbook only supports Fedora (got {{ ansible_distribution | default('unknown') }})."
+
+    - name: Assert target_user is a non-root account
+      ansible.builtin.assert:
+        that:
+          - target_user is defined
+          - target_user | length > 0
+          - target_user != "root"
+        fail_msg: "target_user must be set to a non-root user (pass -e target_user=... or use bootstrap.sh)."
+
+    - name: Resolve target user from passwd
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ target_user }}"
+
+    - name: Set target_user_home fact
+      ansible.builtin.set_fact:
+        target_user_home: "{{ ansible_facts.getent_passwd[target_user][4] }}"
+
   roles:
     - role: base
       tags: base
+
+    - role: multimedia
+      tags: multimedia
 
     - role: nvidia
       tags: nvidia
@@ -25,26 +52,10 @@
     - role: devtools
       tags: devtools
 
-    - role: multimedia
-      tags: multimedia
-
     - role: language
       tags: language
 
   post_tasks:
     - name: Notify reboot required
       ansible.builtin.debug:
-        msg: "Setup complete! A reboot is required to apply all changes. Run: sudo reboot"
-      tags: always
-
-    - name: Prompt for reboot
-      ansible.builtin.pause:
-        prompt: "Reboot now? (yes/no)"
-      register: reboot_prompt
-      tags: always
-
-    - name: Reboot system
-      ansible.builtin.command:
-        cmd: systemctl reboot
-      when: reboot_prompt.user_input | lower == 'yes'
-      tags: always
+        msg: "Setup complete! A reboot is recommended to apply all changes. Run: sudo reboot"

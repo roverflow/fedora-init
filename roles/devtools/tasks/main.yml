@@ -28,7 +28,7 @@
 
 - name: Check if rustup is installed
   ansible.builtin.stat:
-    path: "/home/{{ target_user }}/.rustup"
+    path: "{{ target_user_home }}/.rustup"
   register: rustup_dir
   when: devtools_install_rust
   tags: devtools
@@ -46,7 +46,7 @@
     cmd: sh /tmp/rustup-init.sh -y
   become_user: "{{ target_user }}"
   environment:
-    HOME: "/home/{{ target_user }}"
+    HOME: "{{ target_user_home }}"
   when: devtools_install_rust and not rustup_dir.stat.exists
   tags: devtools
 
@@ -61,7 +61,7 @@
 
 - name: Check if nvm is installed
   ansible.builtin.stat:
-    path: "/home/{{ target_user }}/.nvm"
+    path: "{{ target_user_home }}/.nvm"
   register: nvm_dir
   when: devtools_install_nvm
   tags: devtools
@@ -79,7 +79,7 @@
     cmd: bash /tmp/nvm-install.sh
   become_user: "{{ target_user }}"
   environment:
-    HOME: "/home/{{ target_user }}"
+    HOME: "{{ target_user_home }}"
   when: devtools_install_nvm and not nvm_dir.stat.exists
   tags: devtools
 
@@ -103,7 +103,7 @@
 
 - name: Check if gvm is installed
   ansible.builtin.stat:
-    path: "/home/{{ target_user }}/.gvm"
+    path: "{{ target_user_home }}/.gvm"
   register: gvm_dir
   when: devtools_install_gvm
   tags: devtools
@@ -121,7 +121,7 @@
     cmd: bash /tmp/gvm-installer.sh
   become_user: "{{ target_user }}"
   environment:
-    HOME: "/home/{{ target_user }}"
+    HOME: "{{ target_user_home }}"
   when: devtools_install_gvm and not gvm_dir.stat.exists
   tags: devtools
 
@@ -136,16 +136,88 @@
 
 - name: Check if pyenv is installed
   ansible.builtin.stat:
-    path: "/home/{{ target_user }}/.pyenv"
+    path: "{{ target_user_home }}/.pyenv"
   register: pyenv_dir
   when: devtools_install_pyenv
   tags: devtools
 
+- name: Download pyenv installer
+  ansible.builtin.get_url:
+    url: "{{ devtools_pyenv_install_url }}"
+    dest: /tmp/pyenv-installer.sh
+    mode: "0755"
+  when: devtools_install_pyenv and not pyenv_dir.stat.exists
+  tags: devtools
+
 - name: Install pyenv
-  ansible.builtin.shell:
-    cmd: curl -fsSL {{ devtools_pyenv_install_url }} | bash
+  ansible.builtin.command:
+    cmd: bash /tmp/pyenv-installer.sh
   become_user: "{{ target_user }}"
   environment:
-    HOME: "/home/{{ target_user }}"
+    HOME: "{{ target_user_home }}"
   when: devtools_install_pyenv and not pyenv_dir.stat.exists
+  tags: devtools
+
+- name: Clean up pyenv installer
+  ansible.builtin.file:
+    path: /tmp/pyenv-installer.sh
+    state: absent
+  when: devtools_install_pyenv
+  tags: devtools
+
+# --- Ensure version managers are available in zsh ---
+
+- name: Ensure rustup is sourced in zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ target_user_home }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: rustup"
+    block: |
+      [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+    create: true
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0644"
+  when: devtools_install_rust
+  tags: devtools
+
+- name: Ensure nvm is sourced in zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ target_user_home }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: nvm"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    create: true
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0644"
+  when: devtools_install_nvm
+  tags: devtools
+
+- name: Ensure gvm is sourced in zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ target_user_home }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: gvm"
+    block: |
+      [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
+    create: true
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0644"
+  when: devtools_install_gvm
+  tags: devtools
+
+- name: Ensure pyenv is sourced in zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ target_user_home }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: pyenv"
+    block: |
+      export PYENV_ROOT="$HOME/.pyenv"
+      [[ -d "$PYENV_ROOT/bin" ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+      command -v pyenv >/dev/null && eval "$(pyenv init - zsh)"
+    create: true
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0644"
+  when: devtools_install_pyenv
   tags: devtools

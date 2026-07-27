@@ -4,3 +4,7 @@ enable_nvidia: false
 desktop_environment: kde
 enable_os_prober: false
 enable_gaming: false
+enable_cursor: false
+firewall_allow_ssh: false
+firewall_allow_rdp: false
+firewall_tcp_ports: []

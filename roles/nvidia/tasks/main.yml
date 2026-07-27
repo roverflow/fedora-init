@@ -1,32 +1,45 @@
 ---
+- name: Check Secure Boot status
+  ansible.builtin.command:
+    cmd: mokutil --sb-state
+  register: nvidia_secure_boot
+  failed_when: false
+  changed_when: false
+  tags: nvidia
+
+- name: Warn when Secure Boot is enabled
+  ansible.builtin.debug:
+    msg: >-
+      Secure Boot appears enabled. Proprietary NVIDIA akmods will not load until
+      a Machine Owner Key (MOK) is enrolled (mokutil --import after kmodgenca).
+      After first boot with the drivers installed, complete MOK enrollment in the
+      blue MOK manager screen, then reboot again.
+  when: >-
+    nvidia_secure_boot.rc == 0 and
+    ('enabled' in (nvidia_secure_boot.stdout | default('') | lower))
+  tags: nvidia
+
+- name: Pause for Secure Boot acknowledgement
+  ansible.builtin.pause:
+    prompt: >-
+      Secure Boot is enabled. NVIDIA modules need MOK enrollment after install.
+      Press Enter to continue, or Ctrl+C to abort.
+  when: >-
+    nvidia_secure_boot.rc == 0 and
+    ('enabled' in (nvidia_secure_boot.stdout | default('') | lower))
+  tags: nvidia
+
 - name: Install NVIDIA driver packages
   ansible.builtin.dnf:
     name: "{{ nvidia_driver_packages }}"
     state: present
+  register: nvidia_drivers
   tags: nvidia
 
 - name: Install NVIDIA video acceleration packages
   ansible.builtin.dnf:
     name: "{{ nvidia_support_packages }}"
     state: present
-  tags: nvidia
-
-- name: Update multimedia group with NVIDIA-aware builds
-  ansible.builtin.command:
-    cmd: dnf5 group install --with-optional multimedia --setopt=install_weak_deps=False -y
-  changed_when: true
-  tags: nvidia
-
-- name: Build NVIDIA kernel module
-  ansible.builtin.command:
-    cmd: akmods --force
-  changed_when: true
-  tags: nvidia
-
-- name: Rebuild initramfs with NVIDIA modules
-  ansible.builtin.command:
-    cmd: dracut --force
-  changed_when: true
   tags: nvidia
 
 - name: Blacklist nouveau driver
@@ -36,6 +49,21 @@
       blacklist nouveau
       options nouveau modeset=0
     mode: "0644"
+  register: nvidia_nouveau_blacklist
+  tags: nvidia
+
+- name: Build NVIDIA kernel module
+  ansible.builtin.command:
+    cmd: akmods --force
+  when: nvidia_drivers is changed or nvidia_nouveau_blacklist is changed
+  changed_when: true
+  tags: nvidia
+
+- name: Rebuild initramfs with NVIDIA modules and nouveau blacklist
+  ansible.builtin.command:
+    cmd: dracut --force
+  when: nvidia_drivers is changed or nvidia_nouveau_blacklist is changed
+  changed_when: true
   tags: nvidia
 
 - name: Check current kernel args

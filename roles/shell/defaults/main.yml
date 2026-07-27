@@ -1,3 +1,4 @@
 ---
 shell_zsh_theme: steeef
-shell_ohmyzsh_install_url: "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+# Pinned install script revision (update periodically).
+shell_ohmyzsh_install_url: "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/b37dd49ca5bfe0d99b35607637152cb8cc8b29d7/tools/install.sh"

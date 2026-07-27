@@ -1,2 +1,4 @@
 ---
-# desktop_environment is set in group_vars/all.yml (kde or gnome)
+desktop_environment: kde
+enable_cursor: false
+cursor_download_api: "https://cursor.com/api/download?platform=linux-x64&releaseTrack=stable"

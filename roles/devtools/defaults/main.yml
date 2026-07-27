@@ -27,9 +27,8 @@ devtools_packaging_packages:
 devtools_install_rust: true
 devtools_install_nvm: true
 devtools_install_gvm: true
+devtools_install_pyenv: true
 
 devtools_nvm_install_url: "https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh"
-devtools_gvm_install_url: "https://raw.githubusercontent.com/moovweb/gvm/master/binscripts/gvm-installer"
-
-devtools_install_pyenv: true
-devtools_pyenv_install_url: "https://pyenv.run"
+devtools_gvm_install_url: "https://raw.githubusercontent.com/moovweb/gvm/dd652539fa4b771840846f8319fad303c7d0a8d2/binscripts/gvm-installer"
+devtools_pyenv_install_url: "https://raw.githubusercontent.com/pyenv/pyenv-installer/63a9e6a216796aeba2535a3bac8e79ba5d95166d/bin/pyenv-installer"

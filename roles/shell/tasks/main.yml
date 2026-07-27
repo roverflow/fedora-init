@@ -7,7 +7,7 @@
 
 - name: Check if oh-my-zsh is installed
   ansible.builtin.stat:
-    path: "/home/{{ target_user }}/.oh-my-zsh"
+    path: "{{ target_user_home }}/.oh-my-zsh"
   register: ohmyzsh_dir
   tags: shell
 
@@ -24,7 +24,7 @@
     cmd: sh /tmp/ohmyzsh-install.sh --unattended
   become_user: "{{ target_user }}"
   environment:
-    HOME: "/home/{{ target_user }}"
+    HOME: "{{ target_user_home }}"
   when: not ohmyzsh_dir.stat.exists
   tags: shell
 
@@ -34,11 +34,15 @@
     state: absent
   tags: shell
 
-- name: Set zsh theme to steeef
+- name: Set zsh theme
   ansible.builtin.lineinfile:
-    path: "/home/{{ target_user }}/.zshrc"
+    path: "{{ target_user_home }}/.zshrc"
     regexp: '^ZSH_THEME='
     line: 'ZSH_THEME="{{ shell_zsh_theme }}"'
+    create: true
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: "0644"
   become_user: "{{ target_user }}"
   tags: shell
 
